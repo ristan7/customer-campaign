@@ -1,0 +1,49 @@
+﻿using CustomerCampaign.Application.Common.Interfaces;
+using CustomerCampaign.Infrastructure.Persistence;
+using CustomerCampaign.Infrastructure.Security;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace CustomerCampaign.Infrastructure
+{
+    public static class DependencyInjection
+    {
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+        {
+            var provider = configuration.GetValue("DatabaseProvider", DatabaseProvider.MySql);
+
+            var connectionString = configuration.GetConnectionString("Default");
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException("Connection string 'Default' is not configured.");
+
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                switch (provider)
+                {
+                    case DatabaseProvider.MySql:
+                        var version = configuration["MySqlServerVersion"] ?? "8.0.42";
+                        options.UseMySql(connectionString, ServerVersion.Parse(version));
+                        break;
+                    case DatabaseProvider.SqlServer:
+                        options.UseSqlServer(connectionString);
+                        break;
+                    case DatabaseProvider.PostgreSql:
+                        options.UseNpgsql(connectionString);
+                        break;
+                    default:
+                        throw new NotSupportedException($"Database provider '{provider}' is not supported.");
+                }
+            });
+
+            services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+            services.AddSingleton<IPasswordHasher, PasswordHasherService>();
+            services.AddScoped<DbInitializer>();
+
+            return services;
+        }
+    }
+}

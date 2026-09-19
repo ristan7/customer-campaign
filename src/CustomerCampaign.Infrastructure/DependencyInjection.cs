@@ -4,6 +4,8 @@ using CustomerCampaign.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using CustomerCampaign.Infrastructure.ExternalServices.FindPerson;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -42,6 +44,16 @@ namespace CustomerCampaign.Infrastructure
             services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
             services.AddSingleton<IPasswordHasher, PasswordHasherService>();
             services.AddScoped<DbInitializer>();
+
+            services.Configure<FindPersonOptions>(configuration.GetSection(FindPersonOptions.SectionName));
+
+            services.AddHttpClient<ICustomerDirectory, FindPersonSoapClient>()
+                .AddStandardResilienceHandler(o =>
+                {
+                    o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(8);
+                    o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(25);
+                    o.Retry.MaxRetryAttempts = 2;
+                });
 
             return services;
         }

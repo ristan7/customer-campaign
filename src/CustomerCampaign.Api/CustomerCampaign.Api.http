@@ -17,7 +17,7 @@ X-Agent-Id: 3
 ### 3. Nepostojeći kupac
 POST {{host}}/api/v1/rewards
 Content-Type: application/json
-X-Agent-Id: 2
+X-Agent-Id: 3
 
 { "customerExternalId": 99999 }
 

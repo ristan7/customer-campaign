@@ -66,7 +66,11 @@ namespace CustomerCampaign.Infrastructure
                         o.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(10);
                     });
             }
+
             services.AddSingleton<IClock, CampaignClock>();
+
+            services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+            services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
             return services;
         }

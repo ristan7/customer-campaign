@@ -49,13 +49,23 @@ namespace CustomerCampaign.Infrastructure
 
             services.Configure<FindPersonOptions>(configuration.GetSection(FindPersonOptions.SectionName));
 
-            services.AddHttpClient<ICustomerDirectory, FindPersonSoapClient>()
-                .AddStandardResilienceHandler(o =>
-                {
-                    o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(8);
-                    o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(25);
-                    o.Retry.MaxRetryAttempts = 2;
-                });
+            var directoryProvider = configuration["CustomerDirectory:Provider"] ?? "Soap";
+
+            if (string.Equals(directoryProvider, "Stub", StringComparison.OrdinalIgnoreCase))
+            {
+                services.AddScoped<ICustomerDirectory, StubCustomerDirectory>();
+            }
+            else
+            {
+                services.AddHttpClient<ICustomerDirectory, FindPersonSoapClient>()
+                    .AddStandardResilienceHandler(o =>
+                    {
+                        o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(5);
+                        o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(12);
+                        o.Retry.MaxRetryAttempts = 1;
+                        o.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(10);
+                    });
+            }
             services.AddSingleton<IClock, CampaignClock>();
 
             return services;

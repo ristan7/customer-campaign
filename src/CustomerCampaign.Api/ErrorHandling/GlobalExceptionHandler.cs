@@ -17,6 +17,7 @@ namespace CustomerCampaign.Api.ErrorHandling
                 NotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
                 ForbiddenAccessException => (StatusCodes.Status403Forbidden, "Forbidden"),
                 ExternalServiceException => (StatusCodes.Status503ServiceUnavailable, "External service unavailable"),
+                UnauthorizedException => (StatusCodes.Status401Unauthorized, "Authentication failed"),
                 _ => (StatusCodes.Status500InternalServerError, "Unexpected error")
             };
 

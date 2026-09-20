@@ -1,16 +1,17 @@
 ﻿using CustomerCampaign.Application.Common.Interfaces;
+using CustomerCampaign.Infrastructure.Csv;
 using CustomerCampaign.Infrastructure.ExternalServices.FindPerson;
 using CustomerCampaign.Infrastructure.Persistence;
 using CustomerCampaign.Infrastructure.Security;
+using CustomerCampaign.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-using CustomerCampaign.Infrastructure.Time;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace CustomerCampaign.Infrastructure
 {
@@ -71,6 +72,8 @@ namespace CustomerCampaign.Infrastructure
 
             services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
             services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
+
+            services.AddSingleton<IPurchaseCsvParser, PurchaseCsvParser>();
 
             return services;
         }

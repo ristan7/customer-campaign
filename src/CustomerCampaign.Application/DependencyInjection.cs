@@ -1,6 +1,8 @@
-﻿using CustomerCampaign.Application.Rewards;
+﻿using CustomerCampaign.Application.Authentication;
+using CustomerCampaign.Application.Campaigns;
+using CustomerCampaign.Application.Imports;
+using CustomerCampaign.Application.Rewards;
 using Microsoft.Extensions.DependencyInjection;
-using CustomerCampaign.Application.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,6 +15,10 @@ namespace CustomerCampaign.Application
         {
             services.AddScoped<IRewardService, RewardService>();
             services.AddScoped<IAuthService, AuthService>();
+
+            services.AddScoped<IPurchaseImportService, PurchaseImportService>();
+            services.AddScoped<ICampaignService, CampaignService>();
+
             return services;
         }
     }

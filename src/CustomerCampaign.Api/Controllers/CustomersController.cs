@@ -12,18 +12,10 @@ public class CustomersController(ICustomerDirectory customerDirectory) : Control
     [HttpGet("{externalId:int}")]
     public async Task<ActionResult<CustomerInfo>> Get(int externalId, CancellationToken ct)
     {
-        try
-        {
-            var customer = await customerDirectory.FindByIdAsync(externalId, ct);
-            return customer is null
-                ? Problem(statusCode: StatusCodes.Status404NotFound, title: "Customer not found",
-                          detail: $"Customer {externalId} does not exist in CRM.")
-                : Ok(customer);
-        }
-        catch (ExternalServiceException ex)
-        {
-            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
-                           title: "CRM unavailable", detail: ex.Message);
-        }
+        var customer = await customerDirectory.FindByIdAsync(externalId, ct);
+        return customer is null
+            ? Problem(statusCode: StatusCodes.Status404NotFound, title: "Customer not found",
+                      detail: $"Customer {externalId} does not exist in CRM.")
+            : Ok(customer);
     }
 }

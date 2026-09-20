@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.Json.Serialization;
 using CustomerCampaign.Api.ErrorHandling;
 using CustomerCampaign.Api.Security;
 using CustomerCampaign.Application;
@@ -9,12 +7,40 @@ using CustomerCampaign.Infrastructure;
 using CustomerCampaign.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddOpenApi();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(o =>
+{
+    o.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Customer Campaign API",
+        Version = "v1",
+        Description = "Loyalty discount campaign API (agents portal backend + external CRM integration)."
+    });
+
+    o.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Paste the accessToken returned by /api/v1/auth/login or /api/v1/auth/token."
+    });
+
+    o.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", doc)] = new List<string>()
+    });
+});
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -65,7 +91,11 @@ app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(o => o.SwaggerEndpoint("/swagger/v1/swagger.json", "Customer Campaign API v1"));
+    }
 }
 
 app.UseHttpsRedirection();

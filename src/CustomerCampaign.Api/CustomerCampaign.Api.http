@@ -1,6 +1,47 @@
-@CustomerCampaign.Api_HostAddress = http://localhost:5223
+@host = https://localhost:7233
 
-GET {{CustomerCampaign.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### 1. Unos kupca (agent1)
+POST {{host}}/api/v1/rewards
+Content-Type: application/json
+X-Agent-Id: 2
 
-###
+{ "customerExternalId": 6, "note": "Loyal customer" }
+
+### 2. Isti kupac, drugi agent
+POST {{host}}/api/v1/rewards
+Content-Type: application/json
+X-Agent-Id: 3
+
+{ "customerExternalId": 1 }
+
+### 3. Nepostojeći kupac
+POST {{host}}/api/v1/rewards
+Content-Type: application/json
+X-Agent-Id: 2
+
+{ "customerExternalId": 99999 }
+
+### 4. Admin pokušava unos
+POST {{host}}/api/v1/rewards
+Content-Type: application/json
+X-Agent-Id: 1
+
+{ "customerExternalId": 2 }
+
+### 5. Moji današnji unosi (agent1)
+GET {{host}}/api/v1/rewards/my
+X-Agent-Id: 2
+
+### 6. Agent2 poništava tuđi unos
+DELETE {{host}}/api/v1/rewards/1
+X-Agent-Id: 3
+
+### 7. Agent1 poništava svoj unos 
+DELETE {{host}}/api/v1/rewards/1
+X-Agent-Id: 2
+
+### 8. Lista svih aktivnih (admin/eksterni sistem)
+GET {{host}}/api/v1/rewards?page=1&pageSize=20
+
+### 9. Dobavljanje jednog klijenta
+GET {{host}}/api/v1/customers/1

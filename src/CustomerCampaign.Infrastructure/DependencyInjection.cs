@@ -1,10 +1,12 @@
 ﻿using CustomerCampaign.Application.Common.Interfaces;
+using CustomerCampaign.Infrastructure.ExternalServices.FindPerson;
 using CustomerCampaign.Infrastructure.Persistence;
 using CustomerCampaign.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using CustomerCampaign.Infrastructure.ExternalServices.FindPerson;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using CustomerCampaign.Infrastructure.Time;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -54,6 +56,7 @@ namespace CustomerCampaign.Infrastructure
                     o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(25);
                     o.Retry.MaxRetryAttempts = 2;
                 });
+            services.AddSingleton<IClock, CampaignClock>();
 
             return services;
         }

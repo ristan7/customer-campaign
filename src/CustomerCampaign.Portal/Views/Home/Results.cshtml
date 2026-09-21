@@ -8,6 +8,52 @@
     <div class="alert alert-danger">@error</div>
 }
 
+@{
+    var import = TempData["ImportResult"] is string importJson
+        ? System.Text.Json.JsonSerializer.Deserialize<ImportResultDto>(importJson)
+        : null;
+}
+
+<div class="card p-4 mb-4">
+    <h5 class="mb-1">Import purchase report</h5>
+    <p class="text-muted small mb-3">
+        CSV with columns <code>CustomerId,PurchaseDate[,OrderReference]</code>.
+        Re-importing the same file is safe: already processed customers are skipped.
+    </p>
+
+    <form asp-action="Import" method="post" enctype="multipart/form-data" class="row g-2 align-items-center">
+        <div class="col-md-8">
+            <input type="file" name="file" accept=".csv" class="form-control" required />
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100">Upload and merge</button>
+        </div>
+    </form>
+
+    @if (import is not null)
+    {
+        <div class="alert @(import.Errors.Count == 0 ? "alert-success" : "alert-warning") mt-3 mb-0">
+            <div class="fw-semibold mb-1">@import.FileName imported (batch #@import.ImportBatchId)</div>
+            <div class="small">
+                @import.TotalRows rows ·
+                <strong>@import.MatchedRows</strong> matched ·
+                @import.UnmatchedRows unmatched ·
+                @import.AlreadyProcessedRows already processed
+            </div>
+
+            @if (import.Errors.Count > 0)
+            {
+                <ul class="small mt-2 mb-0">
+                    @foreach (var e in import.Errors)
+                    {
+                        <li>@(e.RowNumber > 0 ? $"Row {e.RowNumber}: " : "")@e.Message</li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+</div>
+
 @if (Model is not null)
 {
     <div class="d-flex justify-content-between align-items-end mb-3">

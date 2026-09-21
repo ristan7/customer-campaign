@@ -89,6 +89,31 @@ public class HomeController(CampaignApiClient api, ILogger<HomeController> logge
         }
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Import(IFormFile? file, CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+        {
+            TempData["Error"] = "Please choose a CSV file to upload.";
+            return RedirectToAction(nameof(Results));
+        }
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            var result = await api.ImportPurchasesAsync(stream, file.FileName, ct);
+            TempData["ImportResult"] = System.Text.Json.JsonSerializer.Serialize(result);
+        }
+        catch (ApiException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Results));
+    }
+
     [AllowAnonymous]
     public IActionResult Error() => View();
 }

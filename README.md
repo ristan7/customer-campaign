@@ -101,7 +101,7 @@ These exist only for the demo. The seeded campaign starts on the day the databas
 2. The agent signs in to the portal, checks the customer ID against the CRM and registers the customer. The API validates the customer through the FindPerson service and stores a record with `DiscountOfferAccepted = false`.
 3. Each agent can register at most 5 customers per day. Mistakes are corrected by cancelling a registration on the same day, which frees the slot.
 4. A parallel sales channel uses the list of eligible customers. One month after the campaign, it provides a CSV report of customers who actually purchased with the discount.
-5. An admin uploads the report through the API. Matching records are flagged as `DiscountOfferAccepted = true`.
+5. An admin uploads the report through portal or the API. Matching records are flagged as `DiscountOfferAccepted = true`.
 6. Admins see results in the portal; external CRM systems read them through the API.
 
 ## Business rules

@@ -113,10 +113,12 @@
                                 <td class="text-end">
                                     @if (active && !r.DiscountOfferAccepted)
                                     {
-                                        <form asp-action="Cancel" asp-route-id="@r.Id" method="post" class="d-inline"
-                                              onsubmit="return confirm('Cancel this registration? The slot will be freed.');">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
-                                        </form>
+                                        <button type="button" class="btn btn-sm btn-outline-danger cancel-btn"
+                                                data-id="@r.Id"
+                                                data-customer="@r.CustomerName"
+                                                data-customer-id="@r.CustomerExternalId">
+                                            Cancel
+                                        </button>
                                     }
                                 </td>
                             </tr>
@@ -125,6 +127,31 @@
                 </table>
             </div>
         }
+    </div>
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel registration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Cancel the registration for:</p>
+                    <p class="fw-semibold mb-3" id="cancelCustomer"></p>
+                    <p class="text-muted small mb-0">
+                        The customer will no longer be eligible for the discount and your daily slot will be freed.
+                        The record stays in the system with a <em>Cancelled</em> status.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Keep it</button>
+                    <form asp-action="Cancel" method="post" class="d-inline">
+                        <input type="hidden" name="id" id="cancelRewardId" />
+                        <button type="submit" class="btn btn-danger">Cancel registration</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 }
 
@@ -146,5 +173,19 @@
                 target.innerHTML = '<span class="text-danger">CRM check failed.</span>';
             }
         });
+        const cancelModalEl = document.getElementById('cancelModal');
+        if (cancelModalEl) {
+            const cancelModal = new bootstrap.Modal(cancelModalEl);
+
+            document.querySelectorAll('.cancel-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('cancelRewardId').value = btn.dataset.id;
+                    document.getElementById('cancelCustomer').textContent =
+                        `${btn.dataset.customer} (ID ${btn.dataset.customerId})`;
+                    cancelModal.show();
+                });
+            });
+        }
     </script>
+
 }

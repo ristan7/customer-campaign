@@ -79,6 +79,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CrmLookup", p => p.RequireRole(Roles.Agent, Roles.Admin));
 });
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -98,9 +100,13 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

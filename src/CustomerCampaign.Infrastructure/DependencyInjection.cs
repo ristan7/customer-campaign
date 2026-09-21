@@ -31,7 +31,11 @@ namespace CustomerCampaign.Infrastructure
                 {
                     case DatabaseProvider.MySql:
                         var version = configuration["MySqlServerVersion"] ?? "8.0.42";
-                        options.UseMySql(connectionString, ServerVersion.Parse(version));
+                        options.UseMySql(connectionString, ServerVersion.Parse(version),
+                            mySql => mySql.EnableRetryOnFailure(
+                                maxRetryCount: 10,
+                                maxRetryDelay: TimeSpan.FromSeconds(5),
+                                errorNumbersToAdd: null));
                         break;
                     case DatabaseProvider.SqlServer:
                         options.UseSqlServer(connectionString);

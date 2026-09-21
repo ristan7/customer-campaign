@@ -1,0 +1,191 @@
+﻿@model DashboardViewModel
+@{
+    ViewData["Title"] = "My day";
+    var daily = Model.Daily;
+    var limitReached = daily is not null && daily.Remaining <= 0;
+    var percent = daily is null || daily.DailyLimit == 0 ? 0 : daily.Used * 100 / daily.DailyLimit;
+}
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-warning">@Model.ErrorMessage</div>
+}
+
+@if (daily is not null)
+{
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card p-4 h-100">
+                <div class="text-muted small">Today · @daily.Date.ToString("dd.MM.yyyy")</div>
+                <div class="stat-value">@daily.Used / @daily.DailyLimit</div>
+                <div class="text-muted small mb-2">customers registered</div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar @(limitReached ? "bg-danger" : "bg-primary")" style="width: @percent%"></div>
+                </div>
+                <div class="small mt-2 @(limitReached ? "text-danger" : "text-muted")">
+                    @(limitReached ? "Daily limit reached." : $"{daily.Remaining} remaining today.")
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card p-4 h-100">
+                <h5 class="mb-3">Register eligible customer</h5>
+
+                <form asp-action="Register" method="post">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-sm-4">
+                            <label class="form-label small">Customer ID (CRM)</label>
+                            <input type="number" min="1" name="customerExternalId" id="customerId"
+                                   class="form-control" required @(limitReached ? "disabled" : "") />
+                        </div>
+                        <div class="col-sm-3">
+                            <button type="button" id="lookupBtn" class="btn btn-outline-secondary w-100"
+                                @(limitReached ? "disabled" : "")>
+                                Check in CRM
+                            </button>
+                        </div>
+                        <div class="col-sm-5">
+                            <div id="lookupResult" class="small"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label small">Note (optional)</label>
+                        <input type="text" name="note" maxlength="500" class="form-control"
+                               placeholder="e.g. customer since 2015, contacted by phone"
+                        @(limitReached ? "disabled" : "") />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-3" @(limitReached ? "disabled" : "")>
+                        Register customer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-4 mt-4">
+        <h5 class="mb-3">Today's registrations</h5>
+
+        @if (daily.Items.Count == 0)
+        {
+            <p class="text-muted mb-0">No customers registered today.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Customer ID</th>
+                            <th>Name</th>
+                            <th>City</th>
+                            <th>Note</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in daily.Items)
+                        {
+                            var active = r.Status == "Active";
+                            <tr class="@(active ? "" : "text-muted")">
+                                <td>@r.CustomerExternalId</td>
+                                <td>@r.CustomerName</td>
+                                <td>@r.CustomerCity</td>
+                                <td class="small">@r.Note</td>
+                                <td>
+                                    <span class="badge @(active ? "bg-success" : "bg-secondary")">@r.Status</span>
+                                    @if (r.DiscountOfferAccepted)
+                                    {
+                                        <span class="badge bg-info">Purchased</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (active && !r.DiscountOfferAccepted)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger cancel-btn"
+                                                data-id="@r.Id"
+                                                data-customer="@r.CustomerName"
+                                                data-customer-id="@r.CustomerExternalId">
+                                            Cancel
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel registration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Cancel the registration for:</p>
+                    <p class="fw-semibold mb-3" id="cancelCustomer"></p>
+                    <p class="text-muted small mb-0">
+                        The customer will no longer be eligible for the discount and your daily slot will be freed.
+                        The record stays in the system with a <em>Cancelled</em> status.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Keep it</button>
+                    <form asp-action="Cancel" method="post" class="d-inline">
+                        <input type="hidden" name="id" id="cancelRewardId" />
+                        <button type="submit" class="btn btn-danger">Cancel registration</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.getElementById('lookupBtn')?.addEventListener('click', async () => {
+            const id = document.getElementById('customerId').value;
+            const target = document.getElementById('lookupResult');
+            if (!id) { target.innerHTML = '<span class="text-danger">Enter a customer ID.</span>'; return; }
+
+            target.innerHTML = '<span class="text-muted">Checking...</span>';
+            try {
+                const res = await fetch(`/Home/Lookup?id=${encodeURIComponent(id)}`);
+                const data = await res.json();
+                target.innerHTML = data.found
+                    ? `<span class="text-success">&#10003; ${data.name}${data.city ? ', ' + data.city : ''}</span>`
+                    : `<span class="text-danger">${data.message}</span>`;
+            } catch {
+                target.innerHTML = '<span class="text-danger">CRM check failed.</span>';
+            }
+        });
+        const cancelModalEl = document.getElementById('cancelModal');
+        if (cancelModalEl) {
+            const cancelModal = new bootstrap.Modal(cancelModalEl);
+
+            document.querySelectorAll('.cancel-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('cancelRewardId').value = btn.dataset.id;
+                    document.getElementById('cancelCustomer').textContent =
+                        `${btn.dataset.customer} (ID ${btn.dataset.customerId})`;
+                    cancelModal.show();
+                });
+            });
+        }
+    </script>
+
+}

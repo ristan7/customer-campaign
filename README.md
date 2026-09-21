@@ -120,7 +120,7 @@ These exist only for the demo. The seeded campaign starts on the day the databas
 The task description is intentionally open, so these assumptions were made:
 
 - The FindPerson `id` is the unique customer identifier in the CRM and is also the key used in the purchase report.
-- CSV format: `CustomerId,PurchaseDate[,OrderReference]`. Dates are accepted as `yyyy-MM-dd`, `dd.MM.yyyy`, `dd/MM/yyyy` or `MM/dd/yyyy`. A sample is in `sample-data/`.
+- CSV format: `CustomerId,PurchaseDate[,OrderReference]`. Dates are accepted as `yyyy-MM-dd`, `d.M.yyyy` or `M/d/yyyy` (the format Excel produces in an en-US locale). `d/M/yyyy` is intentionally not supported because values like `9/10/2026` would be ambiguous. A sample is in `sample-data/`.
 - A purchase dated before the reward date is treated as a data error and reported.
 - Agents select customers outside the system; the system records and validates the selection.
 - Users and campaigns are provisioned by seed data; user and campaign management screens are out of scope.

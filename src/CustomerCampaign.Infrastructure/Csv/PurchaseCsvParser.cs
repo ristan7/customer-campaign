@@ -12,7 +12,7 @@ namespace CustomerCampaign.Infrastructure.Csv
     public class PurchaseCsvParser : IPurchaseCsvParser
     {
         private static readonly string[] DateFormats =
-            ["yyyy-MM-dd", "dd.MM.yyyy", "dd/MM/yyyy", "MM/dd/yyyy"];
+        ["yyyy-MM-dd", "d.M.yyyy", "M/d/yyyy"];
 
         public (IReadOnlyList<PurchaseRecord> Records, IReadOnlyList<ImportError> Errors) Parse(Stream csvStream)
         {

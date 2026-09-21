@@ -41,7 +41,8 @@ namespace CustomerCampaign.Portal.Controllers
                         ExpiresUtc = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresIn)
                     });
 
-                return LocalRedirect(model.ReturnUrl ?? "/");
+                var landing = token.Role == "Admin" ? "/Home/Results" : "/";
+                return LocalRedirect(model.ReturnUrl ?? landing);
             }
             catch (ApiException ex)
             {

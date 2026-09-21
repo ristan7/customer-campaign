@@ -1,0 +1,64 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: campaign-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-Str0ngRootPass!}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-customer_campaign}
+      MYSQL_USER: ${MYSQL_USER:-campaign}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-Camp4ignPass!}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--protocol=tcp", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-Str0ngRootPass!}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks: [campaign-net]
+
+  api:
+    build:
+      context: .
+      dockerfile: src/CustomerCampaign.Api/Dockerfile
+    container_name: campaign-api
+    restart: on-failure
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: 8080
+      DatabaseProvider: MySql
+      MySqlServerVersion: "8.0.42"
+      ConnectionStrings__Default: "Server=mysql;Port=3306;Database=${MYSQL_DATABASE:-customer_campaign};User=${MYSQL_USER:-campaign};Password=${MYSQL_PASSWORD:-Camp4ignPass!};"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:-docker-demo-signing-key-change-me-0123456789}
+      CustomerDirectory__Provider: ${CRM_PROVIDER:-Soap}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks: [campaign-net]
+
+  portal:
+    build:
+      context: .
+      dockerfile: src/CustomerCampaign.Portal/Dockerfile
+    container_name: campaign-portal
+    restart: on-failure
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: 8080
+      ApiBaseUrl: "http://api:8080/"
+    ports:
+      - "8081:8080"
+    depends_on:
+      - api
+    networks: [campaign-net]
+
+volumes:
+  mysql-data:
+
+networks:
+  campaign-net:
+    driver: bridge

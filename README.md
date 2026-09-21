@@ -82,6 +82,7 @@ $env:CRM_PROVIDER = "Stub"; docker compose up -d
 2. Set `CustomerCampaign.Api` and `CustomerCampaign.Portal` as multiple startup projects and run.
 3. The database, schema and demo data are created automatically on API startup (migrations + seed).
 4. Swagger UI is available at `https://localhost:7233/swagger` in Development.
+5. If the public FindPerson demo service is down, set `"CustomerDirectory": { "Provider": "Stub" }` in `src/CustomerCampaign.Api/appsettings.Development.json` and restart the API.
 
 ### Demo accounts
 
@@ -202,7 +203,7 @@ Creates a consistent `mysqldump` snapshot (`--single-transaction`) in `backups/`
 ## Known limitations and future improvements
 
 - **Identity provider:** replace built-in JWT issuing with Keycloak for SSO, MFA for agents, token revocation and client management.
-- **Admin features:** CSV upload in the portal, agent activity per day, correction of older registrations by an admin, user and campaign management.
+- **Admin features:** agent activity per day, correction of older registrations by an admin, user and campaign management.
 - **Kubernetes:** Deployments, Services, ConfigMaps and Secrets; readiness and liveness probes; horizontal scaling of the stateless API and portal.
 - **Data Protection keys:** persist portal cookie keys outside the container (volume, Redis, Key Vault) so users stay signed in across redeployments.
 - **Testing and CI:** unit tests for business rules with a fake `IClock`, integration tests against a MySQL container, GitHub Actions pipeline.

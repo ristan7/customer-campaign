@@ -35,11 +35,17 @@ namespace CustomerCampaign.Application.Imports
             await db.SaveChangesAsync(ct);
 
             var ids = records.Select(r => r.CustomerExternalId).Distinct().ToList();
+
             var rewards = (await db.CustomerRewards
-                .AsQueryable()
-                .Where(r => ids.Contains(r.CustomerExternalId))
-                .ToListAsync(ct))
-                .ToDictionary(r => r.CustomerExternalId);
+                    .AsQueryable()
+                    .Where(r => ids.Contains(r.CustomerExternalId))
+                    .ToListAsync(ct))
+                .GroupBy(r => r.CustomerExternalId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderBy(r => r.Status == RewardStatus.Active ? 0 : 1)
+                          .ThenByDescending(r => r.RewardDate)
+                          .First());
 
             int matched = 0, unmatched = 0, alreadyProcessed = 0;
 

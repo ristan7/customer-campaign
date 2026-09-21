@@ -48,4 +48,11 @@ namespace CustomerCampaign.Portal.Models
         public string? ErrorMessage { get; set; }
         public string? SuccessMessage { get; set; }
     }
+
+    public record ImportError(int RowNumber, string Message);
+
+    public record ImportResultDto(
+        int ImportBatchId, string FileName, int TotalRows,
+        int MatchedRows, int UnmatchedRows, int AlreadyProcessedRows,
+        IReadOnlyList<ImportError> Errors);
 }

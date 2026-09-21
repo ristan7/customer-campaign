@@ -82,6 +82,7 @@ $env:CRM_PROVIDER = "Stub"; docker compose up -d
 2. Set `CustomerCampaign.Api` and `CustomerCampaign.Portal` as multiple startup projects and run.
 3. The database, schema and demo data are created automatically on API startup (migrations + seed).
 4. Swagger UI is available at `https://localhost:7233/swagger` in Development.
+5. If the public FindPerson demo service is down, set `"CustomerDirectory": { "Provider": "Stub" }` in `src/CustomerCampaign.Api/appsettings.Development.json` and restart the API.
 
 ### Demo accounts
 
@@ -120,7 +121,7 @@ These exist only for the demo. The seeded campaign starts on the day the databas
 The task description is intentionally open, so these assumptions were made:
 
 - The FindPerson `id` is the unique customer identifier in the CRM and is also the key used in the purchase report.
-- CSV format: `CustomerId,PurchaseDate[,OrderReference]`. Dates are accepted as `yyyy-MM-dd`, `dd.MM.yyyy`, `dd/MM/yyyy` or `MM/dd/yyyy`. A sample is in `sample-data/`.
+- CSV format: `CustomerId,PurchaseDate[,OrderReference]`. Dates are accepted as `yyyy-MM-dd`, `d.M.yyyy` or `M/d/yyyy` (the format Excel produces in an en-US locale). `d/M/yyyy` is intentionally not supported because values like `9/10/2026` would be ambiguous. A sample is in `sample-data/`.
 - A purchase dated before the reward date is treated as a data error and reported.
 - Agents select customers outside the system; the system records and validates the selection.
 - Users and campaigns are provisioned by seed data; user and campaign management screens are out of scope.
@@ -202,7 +203,7 @@ Creates a consistent `mysqldump` snapshot (`--single-transaction`) in `backups/`
 ## Known limitations and future improvements
 
 - **Identity provider:** replace built-in JWT issuing with Keycloak for SSO, MFA for agents, token revocation and client management.
-- **Admin features:** CSV upload in the portal, agent activity per day, correction of older registrations by an admin, user and campaign management.
+- **Admin features:** agent activity per day, correction of older registrations by an admin, user and campaign management.
 - **Kubernetes:** Deployments, Services, ConfigMaps and Secrets; readiness and liveness probes; horizontal scaling of the stateless API and portal.
 - **Data Protection keys:** persist portal cookie keys outside the container (volume, Redis, Key Vault) so users stay signed in across redeployments.
 - **Testing and CI:** unit tests for business rules with a fake `IClock`, integration tests against a MySQL container, GitHub Actions pipeline.

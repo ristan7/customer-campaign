@@ -88,5 +88,21 @@ namespace CustomerCampaign.Portal.Services
 
             throw new ApiException((int)response.StatusCode, message);
         }
+
+        public async Task<ImportResultDto> ImportPurchasesAsync(Stream fileStream, string fileName, CancellationToken ct = default)
+        {
+            using var request = Authorized(HttpMethod.Post, "api/v1/imports/purchases");
+
+            var fileContent = new StreamContent(fileStream);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/csv");
+
+            var form = new MultipartFormDataContent();
+            form.Add(fileContent, "file", fileName);
+            request.Content = form;
+
+            var response = await http.SendAsync(request, ct);
+            await EnsureSuccessAsync(response, ct);
+            return (await response.Content.ReadFromJsonAsync<ImportResultDto>(Json, ct))!;
+        }
     }
 }
